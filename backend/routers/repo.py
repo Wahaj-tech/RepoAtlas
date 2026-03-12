@@ -54,3 +54,14 @@ async def analyze(request: AnalyzeRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/impact')
+async def impact(request: ImpactRequest):
+    try:
+        owner, repo = parse_github_url(request.github_url)
+        repo_data = await analyze_repo(owner, repo, {})
+        graph = build_graph(repo_data['file_tree'], repo_data['file_contents'])
+        result = get_impact(graph, request.file_path)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

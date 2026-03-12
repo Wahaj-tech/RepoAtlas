@@ -4,54 +4,44 @@ import re
 def build_graph(file_tree, file_contents):
     G = nx.DiGraph()
 
-    # Aggressive filtering - only core source files
+    KEEP_EXTENSIONS = [".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rb", ".java"]
+
     skip_folders = [
         "test", "tests", "docs", "doc",
         "examples", "example", "__pycache__",
         ".github", "benchmark", "benchmarks",
-        "migrations", "static", "templates",
-        "fixtures", "vendor", "third_party",
-        "contrib", "tools", "scripts",
-        "build", "dist", "node_modules"
-    ]
-
-    skip_extensions = [
-        ".md", ".txt", ".rst", ".cfg",
-        ".ini", ".toml", ".yaml", ".yml",
-        ".json", ".lock", ".sh", ".bat",
-        ".c", ".cpp", ".h", ".hpp"
+        "build", "dist", "vendor", "migrations"
     ]
 
     def should_skip(filepath):
+        ext = "." + filepath.split(".")[-1] if "." in filepath else ""
+        if ext not in KEEP_EXTENSIONS:
+            return True
+
         path_lower = filepath.lower()
-        # Skip if any folder name matches
         parts = path_lower.replace("\\", "/").split("/")
-        for part in parts:
+
+        for part in parts[:-1]:
             for skip in skip_folders:
                 if skip in part:
                     return True
-        # Skip by extension
-        for ext in skip_extensions:
-            if filepath.endswith(ext):
-                return True
-        # Skip test files by name
+
         filename = parts[-1]
-        if filename.startswith("test_") or filename.endswith("_test.py"):
+        if filename.startswith("test_"):
             return True
+
         return False
 
-    # Filter to core files only
     core_files = [
         f for f in file_tree
         if not should_skip(f["path"])
     ]
 
-    # Hard limit - max 40 files for clean visualization
-    # Sort by size descending (bigger files = more important)
+    # Take top 60 by size for initial graph building
     core_files.sort(key=lambda x: x.get("size", 0), reverse=True)
-    core_files = core_files[:40]
+    core_files = core_files[:60]
 
-    # Add nodes
+    # Build full graph
     for file in core_files:
         ext = file["path"].split(".")[-1] if "." in file["path"] else "unknown"
         G.add_node(file["path"],
@@ -70,7 +60,23 @@ def build_graph(file_tree, file_contents):
                 if matched and matched != path:
                     G.add_edge(path, matched)
 
-    return G
+    # Filter to well-connected nodes only — isolates are useless visually
+    connected_nodes = [
+        n for n in G.nodes
+        if G.degree(n) > 0
+    ]
+
+    # Sort connected nodes by degree (most connected first)
+    connected_nodes.sort(key=lambda n: G.degree(n), reverse=True)
+
+    if len(connected_nodes) >= 20:
+        keep_nodes = connected_nodes[:40]
+    else:
+        # Not enough connected nodes — include some isolated ones to fill out
+        isolated = [n for n in G.nodes if G.degree(n) == 0]
+        keep_nodes = connected_nodes + isolated[:40 - len(connected_nodes)]
+
+    return G.subgraph(keep_nodes).copy()
 
 
 def _extract_symbols(filepath, content):

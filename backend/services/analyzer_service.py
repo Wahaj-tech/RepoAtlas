@@ -9,9 +9,26 @@ import asyncio
 async def analyze_repo(owner: str, repo: str, user_profile: dict):
     metadata = await fetch_repo_metadata(owner, repo)
     file_tree = await fetch_repo_tree(owner, repo)
-    
-    # fetch only top 30 files
-    important_files = file_tree[:30]
+
+    # Filter out non-core files before fetching
+    skip_folders = [
+        "test", "tests", "docs", "doc",
+        "examples", "__pycache__", ".github",
+        "benchmark", "benchmarks", "migrations",
+        "static", "templates", "build", "dist"
+    ]
+
+    def should_skip(filepath):
+        path_lower = filepath.lower()
+        parts = path_lower.replace("\\", "/").split("/")
+        for part in parts:
+            for skip in skip_folders:
+                if skip in part:
+                    return True
+        return False
+
+    filtered_tree = [f for f in file_tree if not should_skip(f["path"])]
+    important_files = filtered_tree[:40]
     file_contents = {}
 
     for file in important_files:

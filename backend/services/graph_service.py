@@ -4,41 +4,70 @@ import re
 def build_graph(file_tree, file_contents):
     G = nx.DiGraph()
 
-    for file in file_tree:
-        path = file["path"]
-        ext = path.split(".")[-1] if "." in path else "unknown"
-        content = file_contents.get(path, "")
+    # Aggressive filtering - only core source files
+    skip_folders = [
+        "test", "tests", "docs", "doc",
+        "examples", "example", "__pycache__",
+        ".github", "benchmark", "benchmarks",
+        "migrations", "static", "templates",
+        "fixtures", "vendor", "third_party",
+        "contrib", "tools", "scripts",
+        "build", "dist", "node_modules"
+    ]
 
-        # Extract classes and functions for richer nodes
-        classes, functions = _extract_symbols(path, content)
+    skip_extensions = [
+        ".md", ".txt", ".rst", ".cfg",
+        ".ini", ".toml", ".yaml", ".yml",
+        ".json", ".lock", ".sh", ".bat",
+        ".c", ".cpp", ".h", ".hpp"
+    ]
 
-        G.add_node(path,
+    def should_skip(filepath):
+        path_lower = filepath.lower()
+        # Skip if any folder name matches
+        parts = path_lower.replace("\\", "/").split("/")
+        for part in parts:
+            for skip in skip_folders:
+                if skip in part:
+                    return True
+        # Skip by extension
+        for ext in skip_extensions:
+            if filepath.endswith(ext):
+                return True
+        # Skip test files by name
+        filename = parts[-1]
+        if filename.startswith("test_") or filename.endswith("_test.py"):
+            return True
+        return False
+
+    # Filter to core files only
+    core_files = [
+        f for f in file_tree
+        if not should_skip(f["path"])
+    ]
+
+    # Hard limit - max 40 files for clean visualization
+    # Sort by size descending (bigger files = more important)
+    core_files.sort(key=lambda x: x.get("size", 0), reverse=True)
+    core_files = core_files[:40]
+
+    # Add nodes
+    for file in core_files:
+        ext = file["path"].split(".")[-1] if "." in file["path"] else "unknown"
+        G.add_node(file["path"],
             extension=ext,
             size=file.get("size", 0),
-            node_type="file",
-            classes=classes,
-            functions=functions,
         )
 
-        # Add class/function sub-nodes linked to their parent file
-        for cls in classes:
-            cls_id = f"{path}::{cls}"
-            G.add_node(cls_id, node_type="class", parent_file=path)
-            G.add_edge(path, cls_id)
-
-        for fn in functions:
-            fn_id = f"{path}::{fn}"
-            G.add_node(fn_id, node_type="function", parent_file=path)
-            G.add_edge(path, fn_id)
-
-    for file in file_tree:
+    # Add edges from imports
+    for file in core_files:
         path = file["path"]
         content = file_contents.get(path, "")
         if content:
             imports = parse_imports(path, content)
             for imp in imports:
                 matched = match_import_to_file(imp, list(G.nodes))
-                if matched:
+                if matched and matched != path:
                     G.add_edge(path, matched)
 
     return G

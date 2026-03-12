@@ -182,7 +182,38 @@ async def contribution_path_endpoint(request: ContributionPathRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── AI Layer Endpoints ───────────────────────────────────────────────────────
+@router.post("/impact")
+async def impact_endpoint(request: ImpactRequest):
+    """
+    Impact Simulator — shows which files are affected when a given file changes.
+    Uses the knowledge graph to trace reverse dependencies.
+    """
+    try:
+        owner, repo = parse_github_url(request.github_url)
+
+        cache_key = f"impact_{owner}_{repo}_{request.file_path}"
+        cached = get_cache(cache_key)
+        if cached:
+            return cached
+
+        repo_data = await analyze_repo(
+            owner, repo, {}
+        )
+
+        graph = build_graph(
+            repo_data["file_tree"],
+            repo_data["file_contents"],
+        )
+
+        result = get_impact(graph, request.file_path)
+        result["file_path"] = request.file_path
+        result["repo"] = f"{owner}/{repo}"
+
+        set_cache(cache_key, result)
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/analyze-issue")
 async def analyze_issue_endpoint(request: AnalyzeIssueRequest):

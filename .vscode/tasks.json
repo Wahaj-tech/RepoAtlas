@@ -1,0 +1,133 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run RepoAtlas Backend",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install Deps",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m pip install -r requirements.txt",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "RepoAtlas Backend",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install groq",
+			"type": "shell",
+			"command": "C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m pip install groq",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "RepoAtlas Backend",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start RepoAtlas",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Backend",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "RepoAtlas Server",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "RepoAtlas AI",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-server-error",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -c \"import main\" 2>&1",
+			"args": [
+				"/d",
+				"/c"
+			],
+			"group": "test"
+		},
+		{
+			"label": "restart-server",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"args": [
+				"/d",
+				"/c"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "start-repoatlas",
+			"type": "shell",
+			"command": "taskkill /F /IM python3.13.exe 2>nul & timeout /t 2 & cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "install-groq-pkg",
+			"type": "shell",
+			"command": "C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m pip install groq",
+			"problemMatcher": []
+		},
+		{
+			"label": "verify-import",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -c \"import main; print('Import OK')\"",
+			"problemMatcher": []
+		},
+		{
+			"label": "repoatlas-server-v2",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install Backend Deps",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m pip install -r requirements.txt && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m pip install groq",
+			"isBackground": false
+		},
+		{
+			"label": "Verify Backend Import",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -c \"import main; print('Import OK')\"",
+			"isBackground": false
+		},
+		{
+			"label": "RepoAtlas Backend Windows",
+			"type": "shell",
+			"command": "cd backend && C:/Users/ASUS/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+			"isBackground": true
+		}
+	]
+}

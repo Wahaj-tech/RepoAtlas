@@ -96,6 +96,31 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
         </div>
       </motion.div>
 
+      {data?.language_mismatch && (
+        <div
+          style={{
+            background: "#1c1a00",
+            border: "1px solid #854d0e",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <span style={{ fontSize: "18px" }}>⚠️</span>
+          <span
+            style={{
+              color: "#fbbf24",
+              fontSize: "13px",
+            }}
+          >
+            {data.mismatch_message}
+          </span>
+        </div>
+      )}
+
       {/* Main content grid */}
       <div className="dashboard-grid">
         <div className="dashboard-graph-section">
@@ -118,14 +143,31 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
             </span>
           </div>
           <div className="issues-list">
-            {recommendations.map((issue, index) => (
-              <IssueCard
-                key={issue.issue_id}
-                issue={issue}
-                index={index}
-                onSelect={onSelectIssue}
-              />
-            ))}
+            {recommendations.length > 0 ? (
+              recommendations.map((issue, index) => (
+                <IssueCard
+                  key={issue.issue_id}
+                  issue={issue}
+                  index={index}
+                  onSelect={onSelectIssue}
+                />
+              ))
+            ) : (
+              <div
+                style={{
+                  background: "#0f172a",
+                  border: "1px solid #1e293b",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  color: "#94a3b8",
+                  fontSize: "13px",
+                  lineHeight: 1.5,
+                }}
+              >
+                No matching issues found for your selected languages.
+                Try adding more languages or pick documentation/configuration tasks.
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

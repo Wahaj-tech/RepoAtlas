@@ -25,16 +25,122 @@ def _parse_ai_json(raw: str):
     return json.loads(clean)
 
 
+def _label_based_fallback(issues, max_results=3):
+  """
+  Fallback issue selection when Groq is unavailable/rate-limited.
+  Uses raw fetched issues, filters by useful starter labels, sorts by recency.
+  """
+  allowed_terms = ["bug", "good first issue", "documentation", "enhancement"]
+
+  filtered = []
+  for issue in issues:
+    if issue.get("pull_request"):
+      continue
+    labels = [l.get("name", "") for l in issue.get("labels", [])]
+    labels_lower = [l.lower() for l in labels]
+    if any(any(term in lbl for term in allowed_terms) for lbl in labels_lower):
+      filtered.append((issue, labels))
+
+  filtered.sort(
+    key=lambda x: x[0].get("updated_at") or "",
+    reverse=True,
+  )
+
+  if not filtered:
+    non_pr = []
+    for issue in issues:
+      if issue.get("pull_request"):
+        continue
+      labels = [l.get("name", "") for l in issue.get("labels", [])]
+      non_pr.append((issue, labels))
+    non_pr.sort(key=lambda x: x[0].get("updated_at") or "", reverse=True)
+    filtered = non_pr
+
+  return [
+    {
+      "issue_id": issue.get("number"),
+      "title": issue.get("title", "Untitled issue"),
+      "match_score": 70,
+      "difficulty": "medium",
+      "why_good_match": "Good starter issue based on labels",
+      "files_to_look_at": [],
+      "estimated_time": "2-4 hours",
+      "labels": labels,
+      "url": issue.get("html_url", ""),
+    }
+    for issue, labels in filtered[:max_results]
+  ]
+
+
+def _estimate_time_from_difficulty(difficulty: str, experience: str) -> str:
+  difficulty = (difficulty or "medium").lower()
+  experience = (experience or "beginner").lower()
+
+  table = {
+    "beginner": {"easy": "2-4 hours", "medium": "1-2 days", "hard": "3-5 days"},
+    "intermediate": {"easy": "1-3 hours", "medium": "4-8 hours", "hard": "2-3 days"},
+    "advanced": {"easy": "1-2 hours", "medium": "2-6 hours", "hard": "1-2 days"},
+  }
+  return table.get(experience, table["beginner"]).get(difficulty, "4-8 hours")
+
+
+def _fallback_ranked_issues(candidates, user_profile, max_results=3, include_url=False):
+  """Deterministic fallback ranking when AI is unavailable/rate-limited."""
+  out = []
+  experience = user_profile.get("experience", "beginner")
+
+  for c in candidates[:max_results]:
+    issue = c["issue"]
+    labels = c.get("labels", [])
+    difficulty = c.get("difficulty", "medium")
+    pre_score = int(c.get("pre_score", 50))
+
+    result = {
+      "issue_id": issue.get("number"),
+      "title": issue.get("title", "Untitled issue"),
+      "why_good_match": (
+        "Matched using language overlap, issue labels, and scope fit for your profile. "
+        "Review the issue discussion and linked files to confirm implementation details."
+      ),
+      "difficulty": difficulty,
+      "files_to_look_at": [],
+      "estimated_time": _estimate_time_from_difficulty(difficulty, experience),
+      "match_score": max(35, min(99, pre_score)),
+    }
+
+    if include_url:
+      result["labels"] = labels
+      result["url"] = issue.get("html_url", "")
+
+    out.append(result)
+
+  return out
+
+
 async def get_recommendations(issues, graph, user_profile):
     """Recommendation function used by /api/analyze."""
     repo_files = [n["id"] for n in graph["nodes"]]
     candidates = prefilter_issues(issues, user_profile, repo_files, max_candidates=15)
 
+    if not candidates:
+      fallback = _label_based_fallback(issues, max_results=3)
+      return [
+        {
+          "issue_id": i["issue_id"],
+          "title": i["title"],
+          "why_good_match": i["why_good_match"],
+          "difficulty": i["difficulty"],
+          "files_to_look_at": i["files_to_look_at"],
+          "estimated_time": i["estimated_time"],
+          "match_score": i["match_score"],
+        }
+        for i in fallback
+      ]
+
     issues_for_ai = [
         {
             "id": c["issue"]["number"],
             "title": c["issue"]["title"],
-            "body": (c["issue"].get("body") or "")[:300],
             "labels": c["labels"],
             "pre_score": c["pre_score"],
             "difficulty": c["difficulty"],
@@ -146,13 +252,30 @@ Return ONLY valid JSON array, no explanation, no markdown backticks:
   }}
 ]"""
 
-    response = get_client().chat.completions.create(
+    try:
+      response = get_client().chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=1200,
         temperature=0.3,
-    )
-    return _parse_ai_json(response.choices[0].message.content)
+      )
+      return _parse_ai_json(response.choices[0].message.content)
+    except Exception as e:
+      print(f"GROQ ERROR IN GET_RECOMMENDATIONS: {type(e).__name__}: {e}")
+      fallback = _label_based_fallback(issues, max_results=3)
+      # get_recommendations schema doesn't require labels/url, keep only required fields.
+      return [
+        {
+          "issue_id": i["issue_id"],
+          "title": i["title"],
+          "why_good_match": i["why_good_match"],
+          "difficulty": i["difficulty"],
+          "files_to_look_at": i["files_to_look_at"],
+          "estimated_time": i["estimated_time"],
+          "match_score": i["match_score"],
+        }
+        for i in fallback
+      ]
 
 
 async def match_issues(issues, graph, user_profile, max_results=5, label_filter=None):
@@ -168,13 +291,12 @@ async def match_issues(issues, graph, user_profile, max_results=5, label_filter=
     )
 
     if not candidates:
-        return []
+      return _label_based_fallback(issues, max_results=3)
 
     issues_for_ai = [
         {
             "id": c["issue"]["number"],
             "title": c["issue"]["title"],
-            "body": (c["issue"].get("body") or "")[:300],
             "labels": c["labels"],
             "pre_score": c["pre_score"],
             "difficulty": c["difficulty"],
@@ -210,6 +332,29 @@ Repo files: {repo_files[:50]}
 
 Candidate issues (pre-filtered):
 {json.dumps(issues_for_ai, indent=2)}
+
+==================================================
+CRITICAL REQUIREMENT
+==================================================
+User knows these languages: {user_profile.get('languages', [])}
+
+You MUST only recommend issues that involve
+these specific languages.
+
+If the repo is Python but user selected JavaScript,
+look for issues that involve:
+- JavaScript/TypeScript files in the repo
+- Documentation issues (language agnostic)
+- Configuration issues (language agnostic)
+- Build/tooling issues
+
+If NO issues match the user's languages at all,
+return issues labeled as "documentation" or
+"good first issue" that don't require language
+specific knowledge.
+
+NEVER return issues that require knowledge of
+a language the user did NOT select.
 
 ==================================================
 TASK: ISSUE MATCHING
@@ -260,13 +405,17 @@ Return ONLY valid JSON array, no explanation, no markdown backticks:
   }}
 ]"""
 
-    response = get_client().chat.completions.create(
+    try:
+      response = get_client().chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=1500,
         temperature=0.3,
-    )
-    return _parse_ai_json(response.choices[0].message.content)
+      )
+      return _parse_ai_json(response.choices[0].message.content)
+    except Exception as e:
+      print(f"GROQ ERROR IN MATCH_ISSUES: {type(e).__name__}: {e}")
+      return _label_based_fallback(issues, max_results=3)
 
 
 async def get_contribution_path(issue, graph, user_profile):

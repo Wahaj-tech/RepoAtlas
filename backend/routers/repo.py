@@ -1,4 +1,5 @@
 import httpx
+import time
 from fastapi import APIRouter, HTTPException
 from models.schemas import (
     AnalyzeRequest, ImpactRequest,
@@ -51,20 +52,59 @@ async def get_repo_languages(github_url: str):
 async def analyze(request: AnalyzeRequest):
     try:
         owner, repo = parse_github_url(request.github_url)
-        cache_key = f"{owner}_{repo}_{request.user_profile.experience}"
+        lang_str = "_".join(sorted(request.user_profile.languages or []))
+        cache_key = f"{owner}_{repo}_{lang_str}_{request.user_profile.experience}"
         cached = get_cache(cache_key)
         if cached:
-            return cached
+            if cached.get("recommendations") or cached.get("language_mismatch"):
+                return cached
+            print(f"[Analyze] Ignoring stale empty cached recommendations for {owner}/{repo}")
         repo_data = await analyze_repo(owner, repo, request.user_profile.dict())
+
+        # Detect language mismatch.
+        repo_primary_language = repo_data["metadata"].get("language", "")
+        user_languages = request.user_profile.languages or []
+
+        language_mismatch = False
+        mismatch_message = None
+
+        if repo_primary_language and user_languages:
+            repo_lang_lower = repo_primary_language.lower()
+            user_langs_lower = [l.lower() for l in user_languages]
+
+            if repo_lang_lower not in user_langs_lower:
+                language_mismatch = True
+                mismatch_message = (
+                    f"This repo is primarily {repo_primary_language}. "
+                    f"Showing issues relevant to {', '.join(user_languages)} "
+                    f"where possible, plus documentation issues."
+                )
+
         repo_key = f"{owner}/{repo}"
+        graph_start = time.perf_counter()
         graph = build_graph(repo_data["file_tree"], repo_data["file_contents"], repo_key=repo_key)
         graph_json = export_graph(graph)
-        recommendations = await get_recommendations(repo_data["issues"], graph_json, request.user_profile.dict())
+        print(f"[Timing] Graph building time: {time.perf_counter() - graph_start:.2f}s")
+
+        try:
+            ai_start = time.perf_counter()
+            recommendations = await get_recommendations(
+                repo_data["issues"],
+                graph_json,
+                request.user_profile.dict(),
+            )
+            print(f"[Timing] AI recommendations time: {time.perf_counter() - ai_start:.2f}s")
+        except Exception as rec_err:
+            print(f"[Analyze] Recommendations fallback for {owner}/{repo}: {rec_err}")
+            recommendations = []
+
         result = {
             "metadata": {"name": repo_data["metadata"].get("name"), "description": repo_data["metadata"].get("description"), "stars": repo_data["metadata"].get("stargazers_count"), "language": repo_data["metadata"].get("language")},
             "graph": graph_json,
             "recommendations": recommendations,
             "issues": repo_data["issues"][:10],
+            "language_mismatch": language_mismatch,
+            "mismatch_message": mismatch_message,
         }
         set_cache(cache_key, result)
         return result
@@ -76,7 +116,8 @@ async def match_issues_endpoint(request: MatchIssuesRequest):
     try:
         owner, repo = parse_github_url(request.github_url)
         label_key = "_".join(sorted(request.label_filter or []))
-        cache_key = f"match_{owner}_{repo}_{request.user_profile.experience}_{label_key}"
+        lang_str = "_".join(sorted(request.user_profile.languages or []))
+        cache_key = f"match_{owner}_{repo}_{lang_str}_{request.user_profile.experience}_{label_key}"
         cached = get_cache(cache_key)
         if cached:
             return cached
@@ -84,7 +125,18 @@ async def match_issues_endpoint(request: MatchIssuesRequest):
         repo_key = f"{owner}/{repo}"
         graph = build_graph(repo_data["file_tree"], repo_data["file_contents"], repo_key=repo_key)
         graph_json = export_graph(graph)
-        matches = await match_issues(repo_data["issues"], graph_json, request.user_profile.dict(), max_results=request.max_results, label_filter=request.label_filter)
+        try:
+            matches = await match_issues(
+                repo_data["issues"],
+                graph_json,
+                request.user_profile.dict(),
+                max_results=request.max_results,
+                label_filter=request.label_filter,
+            )
+        except Exception as match_err:
+            print(f"[MatchIssues] Falling back to empty matches for {owner}/{repo}: {match_err}")
+            matches = []
+
         result = {"matches": matches, "total_issues_scanned": len(repo_data["issues"]), "repo": f"{owner}/{repo}"}
         set_cache(cache_key, result)
         return result
@@ -95,7 +147,8 @@ async def match_issues_endpoint(request: MatchIssuesRequest):
 async def contribution_path_endpoint(request: ContributionPathRequest):
     try:
         owner, repo = parse_github_url(request.github_url)
-        cache_key = f"path_{owner}_{repo}_{request.issue_number}_{request.user_profile.experience}"
+        lang_str = "_".join(sorted(request.user_profile.languages or []))
+        cache_key = f"path_{owner}_{repo}_{request.issue_number}_{lang_str}_{request.user_profile.experience}"
         cached = get_cache(cache_key)
         if cached:
             return cached

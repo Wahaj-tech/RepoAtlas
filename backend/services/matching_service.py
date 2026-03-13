@@ -109,25 +109,40 @@ def score_issue(issue: dict, user_profile: dict, repo_files: list[str]) -> dict:
 
 
 def prefilter_issues(issues: list[dict], user_profile: dict,
-                     repo_files: list[str], max_candidates: int = 15,
+                     repo_files: list[str] = None, max_candidates: int = 15,
                      label_filter: list[str] | None = None) -> list[dict]:
     """
     Score and rank issues, return top candidates for AI refinement.
     Automatically filters out pull requests.
     """
+    print(f"Total issues received: {len(issues)}")
+    print(f"First issue sample: {issues[0] if issues else 'NONE'}")
+
     # Reject pull requests — only open issues are valid contribution targets
-    issues = [
+    base_issues = [
         i for i in issues
         if not i.get("pull_request") and "/pull/" not in i.get("html_url", "")
     ]
 
+    filtered = base_issues
+
     if label_filter:
         filter_set = {l.lower() for l in label_filter}
-        issues = [
-            i for i in issues
+        filtered = [
+            i for i in filtered
             if filter_set & {l["name"].lower() for l in i.get("labels", [])}
         ]
 
-    scored = [score_issue(i, user_profile, repo_files) for i in issues]
+    print(f"Issues after filter: {len(filtered)}")
+
+    scored = [score_issue(i, user_profile, repo_files) for i in filtered]
     scored.sort(key=lambda x: x["pre_score"], reverse=True)
+
+    # If filtering leaves too few issues, skip the filter and send all non-PR issues.
+    if len(scored) < 5 and len(base_issues) > 0:
+        print("Prefilter fallback: fewer than 5 issues after filtering, using all non-PR issues.")
+        scored_all = [score_issue(i, user_profile, repo_files) for i in base_issues]
+        scored_all.sort(key=lambda x: x["pre_score"], reverse=True)
+        return scored_all
+
     return scored[:max_candidates]

@@ -84,6 +84,7 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
   const [url, setUrl] = useState("");
   const [selectedLangs, setSelectedLangs] = useState([]);
   const [detectedLanguages, setDetectedLanguages] = useState([]);
+  const [detectedLanguageIds, setDetectedLanguageIds] = useState([]);
   const [primaryLanguage, setPrimaryLanguage] = useState("Unknown");
   const [detecting, setDetecting] = useState(false);
   const [experience, setExperience] = useState("");
@@ -92,6 +93,9 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
 
   const step = externalStep !== undefined ? externalStep : internalStep;
   const setStep = onStepChange || setInternalStep;
+  const visibleLanguages = detectedLanguageIds.length > 0
+    ? languages.filter((lang) => detectedLanguageIds.includes(lang.id))
+    : languages;
 
   const toggleLang = (id) => {
     setSelectedLangs((prev) =>
@@ -116,16 +120,25 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
         .map((lang) => toLanguageId(lang))
         .filter(Boolean);
 
-      setSelectedLangs((prev) => {
-        const merged = new Set([...(prev || []), ...detectedIds]);
-        return Array.from(merged);
-      });
+      const uniqueDetectedIds = Array.from(new Set(detectedIds));
+
+      // If detection succeeded, show only detected languages and pre-select all.
+      // If no usable mapping was found, keep full language list as fallback.
+      if (uniqueDetectedIds.length > 0) {
+        setDetectedLanguageIds(uniqueDetectedIds);
+        setSelectedLangs(uniqueDetectedIds);
+      } else {
+        setDetectedLanguageIds([]);
+        setSelectedLangs([]);
+      }
 
       setDetectedLanguages(detected);
       setPrimaryLanguage(data.primary || "Unknown");
     } catch (err) {
       console.error("Language detection failed", err);
       setDetectedLanguages([]);
+      setDetectedLanguageIds([]);
+      setSelectedLangs([]);
       setPrimaryLanguage("Unknown");
     } finally {
       setDetecting(false);
@@ -345,7 +358,7 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
 
               <div className="lang-scroll-box">
                 <div className="lang-grid">
-                  {languages.map((lang) => (
+                  {visibleLanguages.map((lang) => (
                     <motion.button
                       key={lang.id}
                       className={`lang-btn ${selectedLangs.includes(lang.id) ? "selected" : ""

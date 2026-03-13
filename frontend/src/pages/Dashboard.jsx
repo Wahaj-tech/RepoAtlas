@@ -48,8 +48,8 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
         style={{
-          background: "linear-gradient(135deg, #0f172a, #1e293b)",
-          border: "1px solid #1e3a5f",
+          background: "linear-gradient(135deg, #111827 0%, #1a2236 100%)",
+          border: "1px solid #1e293b",
           borderRadius: "16px",
         }}
       >
@@ -99,8 +99,8 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
       {data?.language_mismatch && (
         <div
           style={{
-            background: "#1c1a00",
-            border: "1px solid #854d0e",
+            background: "rgba(245, 158, 11, 0.06)",
+            border: "1px solid rgba(245, 158, 11, 0.2)",
             borderRadius: "10px",
             padding: "12px 16px",
             marginBottom: "16px",
@@ -155,7 +155,7 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
             ) : (
               <div
                 style={{
-                  background: "#0f172a",
+                  background: "#111827",
                   border: "1px solid #1e293b",
                   borderRadius: "12px",
                   padding: "16px",

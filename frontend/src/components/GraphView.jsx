@@ -34,32 +34,59 @@ const EXT_LABELS = {
 };
 
 function CustomNode({ data }) {
-  const filename = data.label.split("/").pop();
+  const fullPath = data.label;
+  const filename = fullPath.split("/").pop();
   const ext = filename.split(".").pop();
   const isAffected = data.isAffected;
   const isSelected = data.isSelected;
   const isCore = data.connections >= 3;
-  const color = isAffected ? "#EF4444" : isSelected ? "#F59E0B" : (EXT_COLORS[ext] || "#3B82F6");
-  const bg = isAffected ? "rgba(239,68,68,0.2)" : isSelected ? "rgba(245,158,11,0.2)" : (EXT_BG[ext] || "rgba(15,23,42,0.97)");
+  const color = isAffected ? "#EF4444" : isSelected ? "#F59E0B" : (EXT_COLORS[ext] || "#6366f1");
+  const bg = isAffected ? "rgba(239,68,68,0.15)" : isSelected ? "rgba(245,158,11,0.15)" : (EXT_BG[ext] || "rgba(17,24,39,0.95)");
+  const langLabel = EXT_LABELS[ext] || ext;
 
   return (
-    <div style={{
-      minWidth: "150px", maxWidth: "190px", borderRadius: "10px",
-      padding: "14px 18px", textAlign: "center",
-      background: bg,
-      border: isCore ? "3px solid " + color : "2px solid " + color,
-      boxShadow: isCore ? "0 0 18px " + color + "50" : "0 0 8px " + color + "30",
-      cursor: "pointer",
-    }}>
-      <Handle type="target" position={Position.Top} style={{ background: color, width: 8, height: 8, border: "none" }} />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", marginBottom: "5px" }}>
+    <div
+      title={fullPath}
+      style={{
+        minWidth: "140px", maxWidth: "200px", borderRadius: "12px",
+        padding: "12px 16px", textAlign: "center",
+        background: bg,
+        border: isCore ? "2px solid " + color : "1.5px solid " + color + "80",
+        boxShadow: isCore ? "0 0 20px " + color + "40" : "0 2px 8px rgba(0,0,0,0.3)",
+        cursor: "pointer",
+        backdropFilter: "blur(8px)",
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+      }}
+    >
+      <Handle type="target" position={Position.Top} style={{ background: color, width: 7, height: 7, border: "none" }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "6px" }}>
         <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0 }} />
-        {isCore && <span style={{ fontSize: "8px", background: color + "30", color: color, padding: "1px 5px", borderRadius: "4px", fontWeight: 700 }}>CORE</span>}
+        {isCore && (
+          <span style={{
+            fontSize: "8px", background: color + "25", color: color,
+            padding: "2px 6px", borderRadius: "4px", fontWeight: 700,
+            letterSpacing: "0.05em", border: "1px solid " + color + "40",
+          }}>CORE</span>
+        )}
       </div>
-      <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2e8f0", wordBreak: "break-word", lineHeight: 1.4 }}>{filename}</div>
-      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "5px" }}>{data.connections} imports</div>
-      {isAffected && <div style={{ fontSize: "9px", color: "#EF4444", fontWeight: 700, marginTop: "2px" }}>AFFECTED</div>}
-      <Handle type="source" position={Position.Bottom} style={{ background: color, width: 8, height: 8, border: "none" }} />
+      <div style={{
+        fontSize: "12.5px", fontWeight: 700, color: "#f1f5f9",
+        wordBreak: "break-word", lineHeight: 1.3,
+        fontFamily: "'JetBrains Mono', monospace",
+      }}>
+        {filename}
+      </div>
+      <div style={{ fontSize: "10px", color: "#64748b", marginTop: "4px" }}>
+        {langLabel} · {data.connections} import{data.connections !== 1 ? "s" : ""}
+      </div>
+      {isAffected && (
+        <div style={{
+          fontSize: "9px", color: "#EF4444", fontWeight: 700, marginTop: "3px",
+          background: "rgba(239,68,68,0.12)", padding: "1px 6px", borderRadius: "3px",
+          display: "inline-block",
+        }}>AFFECTED</div>
+      )}
+      <Handle type="source" position={Position.Bottom} style={{ background: color, width: 7, height: 7, border: "none" }} />
     </div>
   );
 }
@@ -284,13 +311,13 @@ export default function GraphView({ graphData, githubUrl }) {
           nodesConnectable={false}
           elementsSelectable={false}
         >
-          <Background color="#1e293b" gap={24} size={1} />
+          <Background color="#1e293b" gap={24} size={1} variant="dots" />
           <Controls />
-          <MiniMap nodeColor={(n) => EXT_COLORS[n.id.split(".").pop()] || "#3B82F6"} style={{ background: "#0f172a" }} />
+          <MiniMap nodeColor={(n) => EXT_COLORS[n.id.split(".").pop()] || "#6366f1"} style={{ background: "#0a0f1e", border: "1px solid #1e293b", borderRadius: "8px" }} />
         </ReactFlow>
       </div>
-      <div style={{ display: "flex", gap: "16px", padding: "8px 12px", fontSize: "12px", color: "var(--text-secondary)", flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ color: "var(--text-muted)", marginLeft: "auto" }}>Click any file to see impact · CORE = most imported files</span>
+      <div style={{ display: "flex", gap: "16px", padding: "8px 12px", fontSize: "12px", color: "#64748b", flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ color: "#475569", marginLeft: "auto" }}>Click any file to see impact · CORE = most imported files</span>
       </div>
     </motion.div>
   );

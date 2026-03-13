@@ -5,46 +5,54 @@ import {
   FileCode2,
   ArrowRight,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 
 const difficultyConfig = {
-  easy: { color: "#10B981", bg: "#10B98115", label: "Easy", icon: "🟢" },
-  medium: { color: "#F59E0B", bg: "#F59E0B15", label: "Medium", icon: "🟡" },
-  hard: { color: "#EF4444", bg: "#EF444415", label: "Hard", icon: "🔴" },
+  easy: { color: "#10B981", bg: "#10B98118", label: "Easy" },
+  medium: { color: "#F59E0B", bg: "#F59E0B18", label: "Medium" },
+  hard: { color: "#EF4444", bg: "#EF444418", label: "Hard" },
 };
+
+function getScoreClass(score) {
+  if (score >= 75) return "score-high";
+  if (score >= 50) return "score-mid";
+  return "score-low";
+}
 
 export default function IssueCard({ issue, index, onSelect }) {
   const diff = difficultyConfig[issue.difficulty] || difficultyConfig.medium;
+  const files = issue.files_to_look_at || [];
 
   return (
     <motion.div
       className="issue-card"
-      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 0.2 + index * 0.15, duration: 0.5 }}
-      whileHover={{ y: -6, scale: 1.02 }}
+      transition={{ delay: 0.15 + index * 0.1, duration: 0.45 }}
+      whileHover={{ y: -4 }}
       onClick={() => onSelect(issue)}
     >
       <motion.div
-        className="issue-match-badge"
+        className={`issue-match-badge ${getScoreClass(issue.match_score)}`}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ delay: 0.5 + index * 0.15, type: "spring" }}
+        transition={{ delay: 0.4 + index * 0.1, type: "spring" }}
       >
-        <Zap size={14} />
-        <span>{issue.match_score}% match</span>
+        <Zap size={12} />
+        <span>{issue.match_score}%</span>
       </motion.div>
 
       <div className="issue-card-header">
         <div className="issue-id">
-          <AlertCircle size={14} />
+          <AlertCircle size={13} />
           <span>#{issue.issue_id}</span>
         </div>
         <div
           className="issue-difficulty"
-          style={{ background: diff.bg, color: diff.color }}
+          style={{ background: diff.bg, color: diff.color, border: `1px solid ${diff.color}30` }}
         >
-          {diff.icon} {diff.label}
+          {diff.label}
         </div>
       </div>
 
@@ -53,32 +61,36 @@ export default function IssueCard({ issue, index, onSelect }) {
 
       <div className="issue-meta">
         <div className="issue-meta-item">
-          <Clock size={14} />
+          <Clock size={13} />
           <span>{issue.estimated_time}</span>
         </div>
-        <div className="issue-meta-item">
-          <FileCode2 size={14} />
-          <span>{issue.files_to_look_at.length} files</span>
-        </div>
-      </div>
-
-      <div className="issue-files">
-        {issue.files_to_look_at.slice(0, 2).map((file, i) => (
-          <span key={i} className="issue-file-tag">
-            {file.split("/").pop()}
-          </span>
-        ))}
-        {issue.files_to_look_at.length > 2 && (
-          <span className="issue-file-tag more">
-            +{issue.files_to_look_at.length - 2} more
-          </span>
+        {files.length > 0 && (
+          <div className="issue-meta-item">
+            <FileCode2 size={13} />
+            <span>{files.length} file{files.length !== 1 ? "s" : ""}</span>
+          </div>
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
-        <motion.div className="issue-cta" whileHover={{ x: 5 }}>
+      {files.length > 0 && (
+        <div className="issue-files">
+          {files.slice(0, 3).map((file, i) => (
+            <span key={i} className="issue-file-tag">
+              {file.split("/").pop()}
+            </span>
+          ))}
+          {files.length > 3 && (
+            <span className="issue-file-tag more">
+              +{files.length - 3}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "2px" }}>
+        <motion.div className="issue-cta" whileHover={{ x: 4 }}>
           <span>View contribution path</span>
-          <ArrowRight size={16} />
+          <ArrowRight size={15} />
         </motion.div>
         {issue.url && (
           <a
@@ -87,15 +99,20 @@ export default function IssueCard({ issue, index, onSelect }) {
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             style={{
-              color: "#60a5fa",
+              color: "#818cf8",
               fontSize: "12px",
               textDecoration: "none",
               display: "flex",
               alignItems: "center",
               gap: "4px",
+              opacity: 0.8,
+              transition: "opacity 0.2s",
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.8")}
           >
-            View on GitHub →
+            <ExternalLink size={12} />
+            GitHub
           </a>
         )}
       </div>

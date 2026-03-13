@@ -35,7 +35,6 @@ export default function LoadingScreen() {
           />
         ))}
       </div>
-
       <motion.div
         className="loading-content"
         initial={{ opacity: 0, y: 30 }}
@@ -51,7 +50,6 @@ export default function LoadingScreen() {
             <Cpu size={36} />
           </div>
         </motion.div>
-
         <motion.h2
           className="loading-title"
           animate={{ opacity: [0.7, 1, 0.7] }}
@@ -59,7 +57,6 @@ export default function LoadingScreen() {
         >
           Analyzing Repository
         </motion.h2>
-
         <div className="loading-steps">
           {steps.map((step, index) => (
             <motion.div
@@ -67,7 +64,7 @@ export default function LoadingScreen() {
               className="loading-step"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 1.2, duration: 0.5 }}
+              transition={{ delay: index * 8, duration: 0.5 }}
             >
               <motion.div
                 className="loading-step-icon"
@@ -80,7 +77,7 @@ export default function LoadingScreen() {
                   ],
                 }}
                 transition={{
-                  delay: index * 1.2,
+                  delay: index * 8,
                   duration: 2,
                   repeat: Infinity,
                 }}
@@ -91,7 +88,7 @@ export default function LoadingScreen() {
                 className="loading-step-label"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{
-                  delay: index * 1.2,
+                  delay: index * 8,
                   duration: 2,
                   repeat: Infinity,
                 }}
@@ -101,15 +98,21 @@ export default function LoadingScreen() {
             </motion.div>
           ))}
         </div>
-
         <div className="loading-progress-track">
           <motion.div
             className="loading-progress-bar"
             initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 5, ease: "easeInOut" }}
+            animate={{ width: "90%" }}
+            transition={{ duration: 80, ease: "easeInOut" }}
           />
         </div>
+        <motion.p
+          style={{ color: "#64748b", fontSize: "12px", marginTop: "12px" }}
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          This may take up to 90 seconds on first load...
+        </motion.p>
       </motion.div>
     </div>
   );

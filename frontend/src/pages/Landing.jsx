@@ -12,6 +12,7 @@ import {
   Zap,
   GitFork,
 } from "lucide-react";
+import { getRepoLanguages } from "../services/api";
 
 const languages = [
   { id: "python", label: "Python", icon: "/icons/python.png" },
@@ -53,12 +54,38 @@ const timeOptions = [
 ];
 
 const langLabelMap = Object.fromEntries(languages.map((l) => [l.id, l.label]));
+const langIdByLabel = Object.fromEntries(
+  languages.map((l) => [l.label.toLowerCase(), l.id])
+);
+
+const toLanguageId = (lang) => {
+  const normalized = (lang || "").trim().toLowerCase();
+  if (!normalized) return null;
+  if (langIdByLabel[normalized]) return langIdByLabel[normalized];
+
+  // Common GitHub language names that differ from UI labels.
+  const aliases = {
+    "c++": "cpp",
+    "c#": "csharp",
+  };
+
+  return aliases[normalized] || null;
+};
+
+const cleanGithubUrl = (githubUrl) =>
+  githubUrl
+    .trim()
+    .replace(/\/$/, "")
+    .replace(/\.git$/, "");
 
 const floatingIcons = [Star, GitFork, Code2, Zap, Sparkles, Github, Globe, Rocket];
 
 export default function Landing({ onAnalyze, error, externalStep, onStepChange }) {
   const [url, setUrl] = useState("");
   const [selectedLangs, setSelectedLangs] = useState([]);
+  const [detectedLanguages, setDetectedLanguages] = useState([]);
+  const [primaryLanguage, setPrimaryLanguage] = useState("Unknown");
+  const [detecting, setDetecting] = useState(false);
   const [experience, setExperience] = useState("");
   const [timeAvailable, setTimeAvailable] = useState("");
   const [internalStep, setInternalStep] = useState(0);
@@ -73,18 +100,47 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
   };
 
   const canProceed = () => {
-    if (step === 0) return url.trim().length > 0;
+    if (step === 0) return url.trim().length > 0 && !detecting;
     if (step === 1) return selectedLangs.length > 0;
     if (step === 2) return experience !== "" && timeAvailable !== "";
     return false;
   };
 
-  const handleNext = () => {
+  const detectLanguages = async (repoUrl) => {
+    setDetecting(true);
+    try {
+      const data = await getRepoLanguages(repoUrl);
+      const detected = Array.isArray(data.languages) ? data.languages : [];
+
+      const detectedIds = detected
+        .map((lang) => toLanguageId(lang))
+        .filter(Boolean);
+
+      setSelectedLangs((prev) => {
+        const merged = new Set([...(prev || []), ...detectedIds]);
+        return Array.from(merged);
+      });
+
+      setDetectedLanguages(detected);
+      setPrimaryLanguage(data.primary || "Unknown");
+    } catch (err) {
+      console.error("Language detection failed", err);
+      setDetectedLanguages([]);
+      setPrimaryLanguage("Unknown");
+    } finally {
+      setDetecting(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (step < 2) {
+      if (step === 0) {
+        await detectLanguages(cleanGithubUrl(url));
+      }
       setStep(step + 1);
     } else {
       const timeValue = timeOptions.find((t) => t.id === timeAvailable)?.value || timeAvailable;
-      onAnalyze(url, {
+      onAnalyze(cleanGithubUrl(url), {
         languages: selectedLangs.map((id) => langLabelMap[id] || id),
         experience,
         time_available: timeValue,
@@ -240,6 +296,53 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
               <p className="step-desc">
                 Select the languages you're comfortable with
               </p>
+
+              {detectedLanguages.length > 0 && (
+                <div style={{
+                  background: "#0f2a1a",
+                  border: "1px solid #16a34a",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                }}>
+                  <span style={{ fontSize: "18px" }}>🔍</span>
+                  <div>
+                    <div style={{
+                      color: "#4ade80",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      marginBottom: "4px",
+                    }}>
+                      Detected in this repository:
+                    </div>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {detectedLanguages.map((lang) => (
+                        <span
+                          key={lang}
+                          style={{
+                            background: "#14532d",
+                            color: "#4ade80",
+                            padding: "2px 8px",
+                            borderRadius: "20px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          ✓ {lang}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{ color: "#bbf7d0", fontSize: "11px", marginTop: "4px" }}>
+                      Pre-selected for you. Primary language: {primaryLanguage}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="lang-scroll-box">
                 <div className="lang-grid">
                   {languages.map((lang) => (
@@ -367,7 +470,9 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
             whileHover={canProceed() ? { scale: 1.05 } : {}}
             whileTap={canProceed() ? { scale: 0.95 } : {}}
           >
-            {step === 2 ? (
+            {detecting ? (
+              <>Scanning repository...</>
+            ) : step === 2 ? (
               <>
                 <Sparkles size={18} />
                 Analyze Repository

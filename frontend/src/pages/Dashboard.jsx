@@ -47,6 +47,11 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
+        style={{
+          background: "linear-gradient(135deg, #0f172a, #1e293b)",
+          border: "1px solid #1e3a5f",
+          borderRadius: "16px",
+        }}
       >
         <div className="repo-header-content">
           <div className="repo-info">
@@ -55,6 +60,7 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
+              style={{ color: "#ffffff", fontSize: "28px", fontWeight: 700 }}
             >
               {metadata.name}
             </motion.h1>
@@ -63,6 +69,7 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
+              style={{ color: "#94a3b8" }}
             >
               {metadata.description}
             </motion.p>
@@ -75,14 +82,14 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
           >
             <div className="repo-stat">
               <Star size={16} className="stat-icon star" />
-              <span className="stat-value">
+              <span className="stat-value" style={{ color: "#f59e0b" }}>
                 {metadata.stars?.toLocaleString()}
               </span>
               <span className="stat-label">stars</span>
             </div>
             <div className="repo-stat">
               <Code2 size={16} className="stat-icon lang" />
-              <span className="stat-value">{metadata.language}</span>
+              <span className="stat-value" style={{ color: "#60a5fa" }}>{metadata.language}</span>
               <span className="stat-label">language</span>
             </div>
           </motion.div>

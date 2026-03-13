@@ -1,6 +1,9 @@
 import networkx as nx
 import re
 
+# In-memory graph cache for impact reuse
+_graph_cache = {}
+
 SKIP_FOLDERS = {
     "test", "tests", "docs", "doc",
     "examples", "example", "__pycache__",
@@ -16,8 +19,6 @@ SKIP_FILENAMES = {
 }
 
 CORE_EXTENSIONS = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".java", ".rb"}
-
-_graph_store = {}
 
 def is_core_file(path):
     ext = "." + path.split(".")[-1] if "." in path else ""
@@ -102,13 +103,18 @@ def build_graph(file_tree, file_contents, repo_key=None):
     if len(G.nodes) > 30:
         sorted_nodes = sorted(G.nodes, key=lambda n: G.degree(n), reverse=True)
         G = G.subgraph(sorted_nodes[:30]).copy()
+    # Cache graph in memory for impact simulator
     if repo_key:
-        _graph_store[repo_key] = G
+        _graph_cache[repo_key] = G
         print(f"[Graph] Stored graph for key: {repo_key}")
     return G
 
-def get_graph_for_repo(repo_key):
-    return _graph_store.get(repo_key)
+def get_graph_for_repo(repo_key: str):
+    """
+    Retrieve a previously built graph from memory cache.
+    Returns None if not found.
+    """
+    return _graph_cache.get(repo_key, None)
 
 def get_impact(G, file_path):
     if file_path not in G.nodes:

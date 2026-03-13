@@ -3,3 +3,17 @@ venv/
 __pycache__/
 *.pyc
 .env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+*.egg-info/
+
+# Environment files
+.env
+.env.local
+.env.production

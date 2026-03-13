@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter, HTTPException
 from models.schemas import (
     AnalyzeRequest, ImpactRequest,
@@ -8,15 +9,43 @@ from services.analyzer_service import analyze_repo
 from services.graph_service import build_graph, get_impact, export_graph, get_graph_for_repo
 from services.cache_service import get_cache, set_cache
 from services.ai_service import get_recommendations, match_issues, get_contribution_path
-from services.github_service import fetch_issues, fetch_repo_metadata
+from services.github_service import fetch_issues, fetch_repo_metadata, fetch_repo_languages
 from services.issue_matcher import analyze_issue
 from services.contribution_path import generate_path
 
 router = APIRouter()
 
+
+def clean_github_url(url: str) -> str:
+    url = url.strip()
+    url = url.rstrip("/")
+    url = url.replace(".git", "")
+    return url
+
 def parse_github_url(url: str):
-    parts = url.rstrip("/").split("/")
+    parts = clean_github_url(url).split("/")
+    if len(parts) < 2:
+        raise HTTPException(status_code=400, detail="Invalid GitHub URL")
     return parts[-2], parts[-1]
+
+
+@router.get("/repo-languages")
+async def get_repo_languages(github_url: str):
+    try:
+        github_url = clean_github_url(github_url)
+        owner, repo = parse_github_url(github_url)
+
+        async with httpx.AsyncClient() as client:
+            languages = await fetch_repo_languages(owner, repo, client)
+
+        return {
+            "languages": languages,
+            "primary": languages[0] if languages else "Unknown",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/analyze")
 async def analyze(request: AnalyzeRequest):

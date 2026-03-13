@@ -47,3 +47,16 @@ export const getImpact = async (githubUrl, filePath) => {
   });
   return response.data;
 };
+
+export const getRepoLanguages = async (githubUrl) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/repo-languages?github_url=${encodeURIComponent(githubUrl)}`
+    );
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Language detection failed:", err);
+    return { languages: [], primary: "Unknown" };
+  }
+};

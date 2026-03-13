@@ -84,13 +84,13 @@ function CustomNode({ data }) {
         )}
       </div>
       <div style={{
-        fontSize: "11px", fontWeight: 700, color: "#f1f5f9",
+        fontSize: "11px", fontWeight: 700, color: "#000000",
         wordBreak: "break-word", lineHeight: 1.25,
         fontFamily: "'JetBrains Mono', monospace",
       }}>
         {filename}
       </div>
-      <div style={{ fontSize: "9px", color: "#64748b", marginTop: "2px" }}>
+      <div style={{ fontSize: "9px", color: "#000000", marginTop: "2px" }}>
         {langLabel} · {connections} conn.
       </div>
       {isAffected && (

@@ -14,39 +14,57 @@ import {
 } from "lucide-react";
 
 const languages = [
-  { id: "python", label: "Python", icon: "🐍" },
-  { id: "javascript", label: "JavaScript", icon: "⚡" },
-  { id: "typescript", label: "TypeScript", icon: "🔷" },
-  { id: "java", label: "Java", icon: "☕" },
-  { id: "go", label: "Go", icon: "🐹" },
-  { id: "rust", label: "Rust", icon: "🦀" },
-  { id: "cpp", label: "C++", icon: "⚙️" },
-  { id: "ruby", label: "Ruby", icon: "💎" },
+  { id: "python", label: "Python", icon: "/icons/python.png" },
+  { id: "javascript", label: "JavaScript", icon: "/icons/javascript.png" },
+  { id: "typescript", label: "TypeScript", icon: "/icons/typescript.png" },
+  { id: "java", label: "Java", icon: "/icons/java.png" },
+  { id: "go", label: "Go", icon: "/icons/go.png" },
+  { id: "rust", label: "Rust", icon: "/icons/rust.png" },
+  { id: "cpp", label: "C++", icon: "/icons/cpp.png" },
+  { id: "ruby", label: "Ruby", icon: "/icons/ruby.png" },
+  { id: "swift", label: "Swift", icon: "/icons/swift.png" },
+  { id: "php", label: "PHP", icon: "/icons/php.png" },
+  { id: "kotlin", label: "Kotlin", icon: "/icons/kotlin.png" },
+  { id: "csharp", label: "C#", icon: "/icons/csharp.png" },
+  { id: "scala", label: "Scala", icon: "/icons/scala.png" },
+  { id: "dart", label: "Dart", icon: "/icons/dart.png" },
+  { id: "haskell", label: "Haskell", icon: "/icons/haskell.png" },
+  { id: "lua", label: "Lua", icon: "/icons/lua.png" },
+  { id: "perl", label: "Perl", icon: "/icons/perl.png" },
+  { id: "r", label: "R", icon: "/icons/r.png" },
+  { id: "julia", label: "Julia", icon: "/icons/julia.png" },
+  { id: "html", label: "HTML", icon: "/icons/html.png" },
+  { id: "css", label: "CSS", icon: "/icons/css.png" },
+  { id: "sql", label: "SQL", icon: "/icons/sql.png" },
+  { id: "shell", label: "Shell", icon: "/icons/shell.png" },
 ];
 
 const experienceLevels = [
-  { id: "beginner", label: "Beginner", desc: "New to open source", icon: "🌱" },
-  { id: "intermediate", label: "Intermediate", desc: "Some contributions", icon: "🌿" },
-  { id: "advanced", label: "Advanced", desc: "Regular contributor", icon: "🌳" },
+  { id: "beginner", label: "Beginner", desc: "New to open source", icon: "/icons/beginner.png" },
+  { id: "intermediate", label: "Intermediate", desc: "Some contributions", icon: "/icons/intermediate.png" },
+  { id: "advanced", label: "Advanced", desc: "Regular contributor", icon: "/icons/advanced.png" },
 ];
 
 const timeOptions = [
-  { id: "1h", label: "1 hour", icon: "⏱️", value: "< 2 hours" },
-  { id: "3h", label: "3 hours", icon: "🕐", value: "half day" },
-  { id: "1d", label: "1 day", icon: "📅", value: "full day" },
-  { id: "1w", label: "1 week", icon: "📆", value: "full day" },
+  { id: "1h", label: "1 hour", icon: "/icons/time_1h.png", value: "< 2 hours" },
+  { id: "3h", label: "3 hours", icon: "/icons/time_3h.png", value: "half day" },
+  { id: "1d", label: "1 day", icon: "/icons/time_1d.png", value: "full day" },
+  { id: "1w", label: "1 week", icon: "/icons/time_1w.png", value: "full day" },
 ];
 
 const langLabelMap = Object.fromEntries(languages.map((l) => [l.id, l.label]));
 
 const floatingIcons = [Star, GitFork, Code2, Zap, Sparkles, Github, Globe, Rocket];
 
-export default function Landing({ onAnalyze, error }) {
+export default function Landing({ onAnalyze, error, externalStep, onStepChange }) {
   const [url, setUrl] = useState("");
   const [selectedLangs, setSelectedLangs] = useState([]);
   const [experience, setExperience] = useState("");
   const [timeAvailable, setTimeAvailable] = useState("");
-  const [step, setStep] = useState(0);
+  const [internalStep, setInternalStep] = useState(0);
+
+  const step = externalStep !== undefined ? externalStep : internalStep;
+  const setStep = onStepChange || setInternalStep;
 
   const toggleLang = (id) => {
     setSelectedLangs((prev) =>
@@ -144,20 +162,6 @@ export default function Landing({ onAnalyze, error }) {
           </p>
         </motion.div>
 
-        {/* Step Progress Indicator */}
-        <div className="landing-progress">
-          {[0, 1, 2].map((s) => (
-            <motion.div
-              key={s}
-              className={`progress-dot ${step >= s ? "active" : ""} ${
-                step === s ? "current" : ""
-              }`}
-              animate={step === s ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 1, repeat: Infinity }}
-            />
-          ))}
-        </div>
-
         {error && (
           <motion.div
             className="landing-error"
@@ -236,21 +240,28 @@ export default function Landing({ onAnalyze, error }) {
               <p className="step-desc">
                 Select the languages you're comfortable with
               </p>
-              <div className="lang-grid">
-                {languages.map((lang) => (
-                  <motion.button
-                    key={lang.id}
-                    className={`lang-btn ${
-                      selectedLangs.includes(lang.id) ? "selected" : ""
-                    }`}
-                    onClick={() => toggleLang(lang.id)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span className="lang-icon">{lang.icon}</span>
-                    <span className="lang-label">{lang.label}</span>
-                  </motion.button>
-                ))}
+              <div className="lang-scroll-box">
+                <div className="lang-grid">
+                  {languages.map((lang) => (
+                    <motion.button
+                      key={lang.id}
+                      className={`lang-btn ${selectedLangs.includes(lang.id) ? "selected" : ""
+                        }`}
+                      onClick={() => toggleLang(lang.id)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <span className="lang-icon">
+                        {lang.icon.startsWith("/") ? (
+                          <img src={lang.icon} alt={lang.label} style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                        ) : (
+                          lang.icon
+                        )}
+                      </span>
+                      <span className="lang-label">{lang.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -265,59 +276,71 @@ export default function Landing({ onAnalyze, error }) {
               transition={{ duration: 0.3 }}
             >
               <h2 className="step-title">
-                <Rocket size={24} /> Your Profile
+                <img src="/icons/profile_step.png" alt="Profile" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                Your Profile
               </h2>
               <p className="step-desc">
                 Tell us about yourself so we can find the best issues
               </p>
 
-              {/* Experience Section */}
-              <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ color: "var(--text-primary)", fontSize: "14px", fontWeight: 600, marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  🚀 Experience Level
-                </h3>
-                <div className="experience-grid">
-                  {experienceLevels.map((level) => (
-                    <motion.button
-                      key={level.id}
-                      className={`exp-btn ${
-                        experience === level.id ? "selected" : ""
-                      }`}
-                      onClick={() => setExperience(level.id)}
-                      whileHover={{ scale: 1.03, y: -4 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      <span className="exp-icon">{level.icon}</span>
-                      <span className="exp-label">{level.label}</span>
-                      <span className="exp-desc">{level.desc}</span>
-                    </motion.button>
-                  ))}
+              <div className="profile-grid">
+                {/* Experience Section */}
+                <div className="profile-section">
+                  <h3 className="profile-section-title">
+                    <img src="/icons/experience.png" alt="Experience" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
+                    Experience Level
+                  </h3>
+                  <div className="experience-grid">
+                    {experienceLevels.map((level) => (
+                      <motion.button
+                        key={level.id}
+                        className={`exp-btn ${experience === level.id ? "selected" : ""
+                          }`}
+                        onClick={() => setExperience(level.id)}
+                        whileHover={{ scale: 1.03, y: -4 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <span className="exp-icon">
+                          {level.icon.startsWith("/") ? (
+                            <img src={level.icon} alt={level.label} style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+                          ) : (
+                            level.icon
+                          )}
+                        </span>
+                        <span className="exp-label">{level.label}</span>
+                        <span className="exp-desc">{level.desc}</span>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Divider */}
-              <div style={{ height: "1px", background: "var(--border)", margin: "20px 0" }} />
-
-              {/* Time Section */}
-              <div>
-                <h3 style={{ color: "var(--text-primary)", fontSize: "14px", fontWeight: 600, marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Clock size={16} /> Time Available
-                </h3>
-                <div className="time-grid">
-                  {timeOptions.map((opt) => (
-                    <motion.button
-                      key={opt.id}
-                      className={`time-btn ${
-                        timeAvailable === opt.id ? "selected" : ""
-                      }`}
-                      onClick={() => setTimeAvailable(opt.id)}
-                      whileHover={{ scale: 1.05, y: -4 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <span className="time-icon">{opt.icon}</span>
-                      <span className="time-label">{opt.label}</span>
-                    </motion.button>
-                  ))}
+                {/* Time Section */}
+                <div className="profile-section">
+                  <h3 className="profile-section-title">
+                    <img src="/icons/time.png" alt="Time" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
+                    Time Available
+                  </h3>
+                  <div className="time-grid">
+                    {timeOptions.map((opt) => (
+                      <motion.button
+                        key={opt.id}
+                        className={`time-btn ${timeAvailable === opt.id ? "selected" : ""
+                          }`}
+                        onClick={() => setTimeAvailable(opt.id)}
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="time-icon">
+                          {opt.icon.startsWith("/") ? (
+                            <img src={opt.icon} alt={opt.label} style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+                          ) : (
+                            opt.icon
+                          )}
+                        </span>
+                        <span className="time-label">{opt.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -356,6 +379,19 @@ export default function Landing({ onAnalyze, error }) {
               </>
             )}
           </motion.button>
+        </div>
+
+        {/* Step Progress Indicator */}
+        <div className="landing-progress">
+          {[0, 1, 2].map((s) => (
+            <motion.div
+              key={s}
+              className={`progress-dot ${step >= s ? "active" : ""} ${step === s ? "current" : ""
+                }`}
+              animate={step === s ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 1, repeat: Infinity }}
+            />
+          ))}
         </div>
       </motion.div>
     </div>

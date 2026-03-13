@@ -31,7 +31,7 @@ function CustomNode({ data }) {
   const ext = filename.split(".").pop();
   const isAffected = data.isAffected;
   const isSelected = data.isSelected;
-  const color = isAffected ? "#EF4444" : isSelected ? "#F59E0B" : (EXT_COLORS[ext] || "#3B82F6");
+  const color = isAffected ? "#EF4444" : isSelected ? "#F59E0B" : (EXT_COLORS[ext] || "#2563eb");
 
   return (
     <motion.div
@@ -106,7 +106,7 @@ export default function GraphView({ graphData, githubUrl }) {
       target: edge.target,
       animated: true,
       style: {
-        stroke: "#3B82F6",
+        stroke: "#2563eb",
         strokeWidth: 2,
       },
     }));
@@ -143,7 +143,7 @@ export default function GraphView({ graphData, githubUrl }) {
         eds.map((e) => ({
           ...e,
           style: {
-            stroke: affected.has(e.source) || affected.has(e.target) ? "#EF4444" : "#3B82F6",
+            stroke: affected.has(e.source) || affected.has(e.target) ? "#EF4444" : "#2563eb",
             strokeWidth: affected.has(e.source) || affected.has(e.target) ? 3 : 2,
           },
           animated: true,

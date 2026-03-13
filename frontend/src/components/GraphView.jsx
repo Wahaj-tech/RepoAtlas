@@ -70,7 +70,7 @@ function CustomNode({ data }) {
         )}
       </div>
       <div style={{
-        fontSize: "12.5px", fontWeight: 700, color: "#f1f5f9",
+        fontSize: "12.5px", fontWeight: 700, color: "var(--text-primary)",
         wordBreak: "break-word", lineHeight: 1.3,
         fontFamily: "'JetBrains Mono', monospace",
       }}>
@@ -151,31 +151,70 @@ function filterEdges(edges, nodes) {
 }
 
 function Legend({ presentExts }) {
+  if (!presentExts || presentExts.length === 0) return null;
+
   return (
     <div style={{
-      position: "absolute", bottom: "60px", left: "12px", zIndex: 10,
-      background: "rgba(15,23,42,0.95)", border: "1px solid #1e293b",
-      borderRadius: "10px", padding: "10px 14px", minWidth: "140px",
+      position: "absolute",
+      top: "20px",
+      right: "20px",
+      zIndex: 10,
+      background: "rgba(255, 255, 255, 0.9)",
+      backdropFilter: "blur(12px)",
+      border: "1px solid var(--border)",
+      borderRadius: "16px",
+      padding: "16px",
+      width: "180px",
+      boxShadow: "0 10px 30px rgba(0, 0, 0, 0.06)",
+      pointerEvents: "none",
     }}>
-      <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", marginBottom: "8px", textTransform: "uppercase" }}>Legend</div>
-      {presentExts.map(ext => (
-        <div key={ext} style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "5px" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: EXT_COLORS[ext] || "#3B82F6", flexShrink: 0 }} />
-          <span style={{ fontSize: "10px", color: "#e2e8f0" }}>{EXT_LABELS[ext] || ext}</span>
+      <div style={{
+        fontSize: "10px",
+        fontWeight: 800,
+        color: "var(--text-muted)",
+        marginBottom: "12px",
+        textTransform: "uppercase",
+        letterSpacing: "0.08em"
+      }}>
+        Graph Legend
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {presentExts.map(ext => (
+          <div key={ext} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              background: EXT_COLORS[ext] || "#3B82F6",
+              boxShadow: `0 0 8px ${EXT_COLORS[ext] || "#3B82F6"}40`
+            }} />
+            <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 600 }}>
+              {EXT_LABELS[ext] || ext}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        height: "1px",
+        background: "var(--border)",
+        margin: "12px 0",
+        opacity: 0.6
+      }} />
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "3px", border: "1.5px solid #3572A5", background: "rgba(53,114,165,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 600 }}>Core file</span>
         </div>
-      ))}
-      <div style={{ borderTop: "1px solid #1e293b", marginTop: "7px", paddingTop: "7px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "5px" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", border: "2px solid #3572A5", background: "rgba(53,114,165,0.2)" }} />
-          <span style={{ fontSize: "10px", color: "#e2e8f0" }}>Core file</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "3px", border: "1.5px solid #EF4444", background: "rgba(239,68,68,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 600 }}>Affected</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "5px" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", border: "2px solid #EF4444", background: "rgba(239,68,68,0.2)" }} />
-          <span style={{ fontSize: "10px", color: "#e2e8f0" }}>Affected</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", border: "2px solid #F59E0B", background: "rgba(245,158,11,0.2)" }} />
-          <span style={{ fontSize: "10px", color: "#e2e8f0" }}>Selected</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "3px", border: "1.5px solid #F59E0B", background: "rgba(245,158,11,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: 600 }}>Selected</span>
         </div>
       </div>
     </div>
@@ -313,7 +352,7 @@ export default function GraphView({ graphData, githubUrl }) {
         >
           <Background color="#1e293b" gap={24} size={1} variant="dots" />
           <Controls />
-          <MiniMap nodeColor={(n) => EXT_COLORS[n.id.split(".").pop()] || "#6366f1"} style={{ background: "#0a0f1e", border: "1px solid #1e293b", borderRadius: "8px" }} />
+          <MiniMap nodeColor={(n) => EXT_COLORS[n.id.split(".").pop()] || "#6366f1"} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "8px" }} />
         </ReactFlow>
       </div>
       <div style={{ display: "flex", gap: "16px", padding: "8px 12px", fontSize: "12px", color: "#64748b", flexWrap: "wrap", alignItems: "center" }}>

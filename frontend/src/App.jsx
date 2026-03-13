@@ -22,13 +22,16 @@ function App() {
     setUserProfile(profile);
     setError(null);
     try {
-      const [analyzeResult, matchResult] = await Promise.all([
-        analyzeRepo(url, profile),
-        matchIssues(url, profile),
-      ]);
+      const analyzeResult = await analyzeRepo(url, profile);
       setRepoData(analyzeResult);
-      setMatchesData(matchResult);
       setPage("dashboard");
+      try {
+        const matchResult = await matchIssues(url, profile);
+        setMatchesData(matchResult);
+      } catch (matchErr) {
+        console.warn("Match issues failed:", matchErr.message);
+        setMatchesData(null);
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to analyze repository. Please check the URL and try again.");
@@ -122,3 +125,5 @@ function App() {
 }
 
 export default App;
+
+

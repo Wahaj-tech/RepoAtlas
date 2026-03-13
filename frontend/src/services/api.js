@@ -2,8 +2,13 @@ import axios from "axios";
 
 const BASE = "http://localhost:8000/api";
 
+const api = axios.create({
+  baseURL: BASE,
+  timeout: 120000,
+});
+
 export const analyzeRepo = async (githubUrl, userProfile) => {
-  const response = await axios.post(BASE + "/analyze", {
+  const response = await api.post("/analyze", {
     github_url: githubUrl,
     user_profile: userProfile,
   });
@@ -11,7 +16,7 @@ export const analyzeRepo = async (githubUrl, userProfile) => {
 };
 
 export const matchIssues = async (githubUrl, userProfile) => {
-  const response = await axios.post(BASE + "/match-issues", {
+  const response = await api.post("/match-issues", {
     github_url: githubUrl,
     user_profile: {
       ...userProfile,
@@ -24,7 +29,7 @@ export const matchIssues = async (githubUrl, userProfile) => {
 };
 
 export const getContributionPath = async (githubUrl, issueNumber, userProfile) => {
-  const response = await axios.post(BASE + "/contribution-path", {
+  const response = await api.post("/contribution-path", {
     github_url: githubUrl,
     issue_number: issueNumber,
     user_profile: {
@@ -36,7 +41,7 @@ export const getContributionPath = async (githubUrl, issueNumber, userProfile) =
 };
 
 export const getImpact = async (githubUrl, filePath) => {
-  const response = await axios.post(BASE + "/impact", {
+  const response = await api.post("/impact", {
     github_url: githubUrl,
     file_path: filePath,
   });

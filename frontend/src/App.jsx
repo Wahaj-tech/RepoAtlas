@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Globe, User } from "lucide-react";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import IssuePage from "./pages/IssuePage";
@@ -15,6 +16,7 @@ function App() {
   const [githubUrl, setGithubUrl] = useState("");
   const [userProfile, setUserProfile] = useState(null);
   const [error, setError] = useState(null);
+  const [landingStep, setLandingStep] = useState(0);
 
   const handleAnalyze = async (url, profile) => {
     setPage("loading");
@@ -57,8 +59,35 @@ function App() {
     setPage("landing");
   };
 
+  const navigateTo = (destination, targetStep = 0) => {
+    if (destination === "landing") {
+      if (page !== "landing") {
+        handleBackToLanding();
+      }
+      setLandingStep(targetStep);
+    } else if (destination === "dashboard" && repoData) {
+      setPage("dashboard");
+    }
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className="app">
+      <div className="global-navbar">
+        <div className="navbar-left">
+          <div className="navbar-brand">
+            <Globe size={20} className="navbar-logo" />
+            <span>Repo<span className="navbar-accent">Atlas</span></span>
+          </div>
+        </div>
+        <div className="navbar-right">
+          <button className="navbar-auth-btn">Signup / Login</button>
+          <button className="navbar-profile-btn">
+            <User size={20} />
+          </button>
+        </div>
+      </div>
+
       <AnimatePresence mode="wait">
         {page === "landing" && (
           <motion.div
@@ -68,7 +97,12 @@ function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Landing onAnalyze={handleAnalyze} error={error} />
+            <Landing 
+              onAnalyze={handleAnalyze} 
+              error={error} 
+              externalStep={landingStep}
+              onStepChange={setLandingStep}
+            />
           </motion.div>
         )}
 

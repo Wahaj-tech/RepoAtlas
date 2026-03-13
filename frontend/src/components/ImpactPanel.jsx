@@ -25,7 +25,7 @@ const defaultTips = [
   "Use the project's linting and formatting tools before submitting.",
 ];
 
-const stepColors = ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981", "#06B6D4", "#F472B6"];
+const stepColors = ["#2563eb", "#1e40af", "#3b82f6", "#F59E0B", "#10B981", "#06B6D4", "#F472B6"];
 const stepIcons = [BookOpen, FileCode2, Target, GitPullRequest, CheckCircle2, Lightbulb, BookOpen];
 
 export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {

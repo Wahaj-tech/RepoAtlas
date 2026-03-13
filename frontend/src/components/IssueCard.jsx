@@ -87,7 +87,7 @@ export default function IssueCard({ issue, index, onSelect }) {
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             style={{
-              color: "#60A5FA",
+              color: "#60a5fa",
               fontSize: "12px",
               textDecoration: "none",
               display: "flex",

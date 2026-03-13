@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { GitBranch, Search, Cpu, Sparkles } from "lucide-react";
 
 const steps = [
-  { icon: GitBranch, label: "Cloning repository...", color: "#3B82F6" },
-  { icon: Search, label: "Analyzing code structure...", color: "#8B5CF6" },
-  { icon: Cpu, label: "Building knowledge graph...", color: "#EC4899" },
+  { icon: GitBranch, label: "Cloning repository...", color: "#2563eb" },
+  { icon: Search, label: "Analyzing code structure...", color: "#1e40af" },
+  { icon: Cpu, label: "Building knowledge graph...", color: "#3b82f6" },
   { icon: Sparkles, label: "Finding perfect issues for you...", color: "#10B981" },
 ];
 

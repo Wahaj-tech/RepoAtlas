@@ -41,7 +41,7 @@ def parse_imports(filepath, content):
     lines = content.split('\n')
     for line in lines:
         line = line.strip()
-        if line.startswith('#'):
+        if line.startswith('#') or line.startswith('//'):
             continue
         if filepath.endswith(".py"):
             if line.startswith('import '):
@@ -60,6 +60,31 @@ def parse_imports(filepath, content):
         elif filepath.endswith(('.js', '.ts', '.jsx', '.tsx')):
             found = re.findall(r'(?:from|require)\s*[\'"]([^\'\"]+)[\'"]', line)
             imports.extend(found)
+        elif filepath.endswith('.java'):
+            # Java: import com.google.common.base.Preconditions;
+            m = re.match(r'^import\s+(?:static\s+)?([\w.]+)\s*;', line)
+            if m:
+                full_import = m.group(1)
+                # Convert com.foo.bar.ClassName -> ClassName
+                parts = full_import.split('.')
+                # Try the last part as a class name and second to last as package
+                if parts:
+                    imports.append(parts[-1])
+                    if len(parts) >= 2:
+                        imports.append('/'.join(parts[-2:]))
+        elif filepath.endswith('.go'):
+            # Go: "github.com/foo/bar"
+            found = re.findall(r'"([^"]+)"', line)
+            for f in found:
+                # Use last segment of the import path
+                parts = f.split('/')
+                if parts:
+                    imports.append(parts[-1])
+        elif filepath.endswith('.rb'):
+            # Ruby: require 'foo' or require_relative 'bar'
+            m = re.match(r"require(?:_relative)?\s+['\"]([^'\"]+)['\"]", line)
+            if m:
+                imports.append(m.group(1).replace('/', '/'))
     return imports
 
 def match_import_to_file(import_str, all_nodes):
@@ -100,9 +125,9 @@ def build_graph(file_tree, file_contents, repo_key=None):
     G.remove_nodes_from(isolated)
     print(f"[Graph] Nodes after filtering isolated: {len(G.nodes)}")
     print(f"[Graph] Edges remaining: {len(G.edges)}")
-    if len(G.nodes) > 30:
+    if len(G.nodes) > 50:
         sorted_nodes = sorted(G.nodes, key=lambda n: G.degree(n), reverse=True)
-        G = G.subgraph(sorted_nodes[:30]).copy()
+        G = G.subgraph(sorted_nodes[:50]).copy()
     # Cache graph in memory for impact simulator
     if repo_key:
         _graph_cache[repo_key] = G
@@ -124,23 +149,42 @@ def get_impact(G, file_path):
         else:
             print(f"[Impact] File not found in graph: {file_path}")
             return {"affected_files": [], "risk_level": "low", "affected_count": 0, "centrality_score": 0}
+
+    # Bidirectional impact:
+    # ancestors = files that IMPORT this file (would break if this file changes)
+    # descendants = files this file IMPORTS (scope of what this file touches)
     try:
-        affected = list(nx.ancestors(G, file_path))
+        ancestors = list(nx.ancestors(G, file_path))
     except Exception as e:
         print(f"[Impact] Error getting ancestors: {e}")
-        affected = []
+        ancestors = []
+
+    try:
+        descendants = list(nx.descendants(G, file_path))
+    except Exception as e:
+        print(f"[Impact] Error getting descendants: {e}")
+        descendants = []
+
+    # Combine both for full impact picture
+    affected = list(set(ancestors + descendants))
+
     try:
         centrality = nx.betweenness_centrality(G)
         central_score = centrality.get(file_path, 0)
     except Exception:
         central_score = 0
-    risk_score = len(affected) / max(len(G.nodes), 1)
+
+    total_nodes = max(len(G.nodes), 1)
+    risk_score = len(affected) / total_nodes
+    degree = G.degree(file_path)
+    degree_ratio = degree / total_nodes
+
     risk_level = (
-        "high" if risk_score > 0.3 or central_score > 0.4
-        else "medium" if risk_score > 0.1 or central_score > 0.2
+        "high" if risk_score > 0.3 or central_score > 0.4 or degree_ratio > 0.3
+        else "medium" if risk_score > 0.1 or central_score > 0.15 or degree_ratio > 0.15
         else "low"
     )
-    print(f"[Impact] File: {file_path}, Affected: {len(affected)}, Risk: {risk_level}")
+    print(f"[Impact] File: {file_path}, Ancestors: {len(ancestors)}, Descendants: {len(descendants)}, Total affected: {len(affected)}, Risk: {risk_level}, Score: {risk_score:.2f}, Centrality: {central_score:.3f}, Degree: {degree}")
     return {"affected_files": affected, "risk_level": risk_level, "affected_count": len(affected), "centrality_score": round(central_score, 3)}
 
 def export_graph(G):

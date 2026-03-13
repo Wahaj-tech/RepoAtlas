@@ -65,18 +65,12 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      style={{ color: "#94a3b8" }}
     >
       <motion.button
         className="back-btn"
         onClick={onBack}
         whileHover={{ x: -4 }}
         whileTap={{ scale: 0.95 }}
-        style={{
-          background: "#1e293b",
-          color: "#ffffff",
-          border: "1px solid #334155",
-        }}
       >
         <ArrowLeft size={18} />
         <span>Back to Dashboard</span>
@@ -87,11 +81,6 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        style={{
-          background: "linear-gradient(135deg, #0f172a, #1e293b)",
-          border: "1px solid #1e3a5f",
-          color: "#ffffff",
-        }}
       >
         <div className="impact-header-top">
           <span className="impact-issue-id">#{issue.issue_id}</span>
@@ -100,7 +89,6 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
             target="_blank"
             rel="noopener noreferrer"
             className="impact-github-link"
-            style={{ color: "#60a5fa" }}
           >
             <ExternalLink size={14} />
             View on GitHub
@@ -108,12 +96,6 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
         </div>
         <h1
           className="impact-title"
-          style={{
-            color: "#ffffff",
-            fontSize: "22px",
-            fontWeight: 700,
-            margin: "0 0 12px 0",
-          }}
         >
           {issue.title}
         </h1>
@@ -197,9 +179,8 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          style={{ background: "#0f172a", border: "1px solid #1e293b" }}
         >
-          <h3 className="impact-section-title" style={{ color: "#ffffff" }}>🗺️ Step-by-Step Guide</h3>
+          <h3 className="impact-section-title">🗺️ Step-by-Step Guide</h3>
           <div className="impact-steps">
             {apiSteps.map((step, index) => {
               const color = stepColors[index % stepColors.length];
@@ -224,20 +205,11 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
                   </div>
                   <div className="impact-step-connector" />
                   <div className="impact-step-content">
-                    <h4 style={{ color: "#ffffff" }}>{step.title}</h4>
-                    <p style={{ color: "#94a3b8" }}>{step.action}</p>
+                    <h4>{step.title}</h4>
+                    <p>{step.action}</p>
                     {step.file && (
                       <span
-                        style={{
-                          display: "inline-block",
-                          background: "#1e293b",
-                          padding: "2px 10px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          color: "#94a3b8",
-                          marginTop: "6px",
-                          fontFamily: "'JetBrains Mono', monospace",
-                        }}
+                        className="impact-step-file"
                       >
                         {step.file}
                       </span>
@@ -267,7 +239,6 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        style={{ background: "#0f172a", border: "1px solid #1e293b" }}
       >
         <h3 className="impact-section-title" style={{ color: "#f59e0b" }}>📁 Files to Explore</h3>
         <div className="impact-files">
@@ -279,10 +250,9 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + i * 0.1 }}
               whileHover={{ scale: 1.03, x: 4 }}
-              style={{ background: "#1e293b", border: "1px solid #1e293b" }}
             >
               <FileCode2 size={16} className="impact-file-icon" />
-              <span className="impact-file-path" style={{ color: "#94a3b8" }}>{file}</span>
+              <span className="impact-file-path">{file}</span>
             </motion.div>
           ))}
         </div>
@@ -293,13 +263,8 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        style={{
-          background: "#0f172a",
-          border: "1px solid #1e3a5f",
-          color: "#94a3b8",
-        }}
       >
-        <h3 className="impact-section-title" style={{ color: "#ffffff" }}>💡 Pro Tips</h3>
+        <h3 className="impact-section-title">💡 Pro Tips</h3>
         <div className="impact-tips">
           {tips.map((tip, i) => (
             <motion.div
@@ -310,7 +275,7 @@ export default function ImpactPanel({ issue, githubUrl, userProfile, onBack }) {
               transition={{ delay: 0.6 + i * 0.08 }}
             >
               <Lightbulb size={14} className="tip-icon" />
-              <span style={{ color: "#94a3b8" }}>{tip}</span>
+              <span>{tip}</span>
             </motion.div>
           ))}
         </div>

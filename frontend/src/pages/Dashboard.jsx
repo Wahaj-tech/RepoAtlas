@@ -34,7 +34,7 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
           <span>New Search</span>
         </motion.button>
         <div className="topbar-brand">
-          <Globe size={20} />
+          <img src="/icons/image.png" alt="Logo" style={{ width: "24px", height: "24px", filter: "brightness(0) invert(1)" }} />
           <span>
             Repo<span className="accent">Atlas</span>
           </span>
@@ -47,11 +47,6 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
-        style={{
-          background: "linear-gradient(135deg, #111827 0%, #1a2236 100%)",
-          border: "1px solid #1e293b",
-          borderRadius: "16px",
-        }}
       >
         <div className="repo-header-content">
           <div className="repo-info">
@@ -60,7 +55,6 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              style={{ color: "#ffffff", fontSize: "28px", fontWeight: 700 }}
             >
               {metadata.name}
             </motion.h1>
@@ -69,7 +63,6 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              style={{ color: "#94a3b8" }}
             >
               {metadata.description}
             </motion.p>
@@ -135,7 +128,7 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
         >
           <div className="issues-header">
             <h3>
-              <Sparkles size={20} className="issues-icon" />
+              <img src="/icons/recommended.png" alt="Recommended" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
               Recommended Issues
             </h3>
             <span className="issues-count">
@@ -155,11 +148,11 @@ export default function Dashboard({ data, matches, githubUrl, userProfile, onSel
             ) : (
               <div
                 style={{
-                  background: "#111827",
-                  border: "1px solid #1e293b",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
                   borderRadius: "12px",
                   padding: "16px",
-                  color: "#94a3b8",
+                  color: "var(--text-secondary)",
                   fontSize: "13px",
                   lineHeight: 1.5,
                 }}

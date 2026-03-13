@@ -38,6 +38,11 @@ const languages = [
   { id: "css", label: "CSS", icon: "/icons/css.png" },
   { id: "sql", label: "SQL", icon: "/icons/sql.png" },
   { id: "shell", label: "Shell", icon: "/icons/shell.png" },
+  { id: "c", label: "C", icon: "/icons/C logo.png" },
+  { id: "cython", label: "Cython", icon: "/icons/cython.png" },
+  { id: "meson", label: "Meson", icon: "/icons/meson.png" },
+  { id: "dockerfile", label: "Dockerfile", icon: "/icons/docker.png" },
+  { id: "plpgsql", label: "PLpgSQL", icon: "/icons/postgresql.png" },
 ];
 
 const experienceLevels = [
@@ -67,9 +72,12 @@ const toLanguageId = (lang) => {
   const aliases = {
     "c++": "cpp",
     "c#": "csharp",
+    "docker": "dockerfile",
+    "postgresql": "plpgsql",
+    "pg_sql": "plpgsql",
   };
 
-  return aliases[normalized] || null;
+  return aliases[normalized] || normalized;
 };
 
 const cleanGithubUrl = (githubUrl) =>
@@ -221,7 +229,7 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
               repeatDelay: 3,
             }}
           >
-            <Globe size={44} />
+            <img src="/icons/image.png" alt="RepoAtlas Logo" style={{ width: "50px", height: "50px", filter: "brightness(0) invert(1)" }} />
           </motion.div>
           <h1 className="landing-title">
             Repo<span className="accent">Atlas</span>
@@ -304,7 +312,8 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
               transition={{ duration: 0.3 }}
             >
               <h2 className="step-title">
-                <Code2 size={24} /> Your Languages
+                <img src="/icons/languages_section.png" alt="Languages" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
+                Your Languages
               </h2>
               <p className="step-desc">
                 Select the languages you're comfortable with
@@ -312,45 +321,71 @@ export default function Landing({ onAnalyze, error, externalStep, onStepChange }
 
               {detectedLanguages.length > 0 && (
                 <div style={{
-                  background: "#0f2a1a",
-                  border: "1px solid #16a34a",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                  marginBottom: "16px",
+                  background: "#ffffff",
+                  border: "2px solid var(--accent)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  marginBottom: "20px",
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
-                  flexWrap: "wrap",
+                  gap: "15px",
+                  boxShadow: "var(--shadow-sm)",
                 }}>
-                  <span style={{ fontSize: "18px" }}>🔍</span>
-                  <div>
+                  <div style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden"
+                  }}>
+                    <img src="/icons/search_detected.png" alt="Detecting" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
                     <div style={{
-                      color: "#4ade80",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      marginBottom: "4px",
+                      color: "#000000",
+                      fontSize: "13px",
+                      fontWeight: 800,
+                      marginBottom: "6px",
                     }}>
                       Detected in this repository:
                     </div>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {detectedLanguages.map((lang) => (
-                        <span
-                          key={lang}
-                          style={{
-                            background: "#14532d",
-                            color: "#4ade80",
-                            padding: "2px 8px",
-                            borderRadius: "20px",
-                            fontSize: "11px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          ✓ {lang}
-                        </span>
-                      ))}
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                      {detectedLanguages.map((lang) => {
+                        const langId = toLanguageId(lang);
+                        const langData = languages.find(l => l.id === langId);
+                        return (
+                          <span
+                            key={lang}
+                            style={{
+                              background: "#f8fafc",
+                              color: "#000000",
+                              padding: "6px 14px",
+                              borderRadius: "12px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              border: "1px solid var(--border)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
+                            }}
+                          >
+                            {langData?.icon && (
+                              <img
+                                src={langData.icon}
+                                alt={lang}
+                                style={{ width: "18px", height: "18px", objectFit: "contain" }}
+                              />
+                            )}
+                            {lang}
+                          </span>
+                        );
+                      })}
                     </div>
-                    <div style={{ color: "#bbf7d0", fontSize: "11px", marginTop: "4px" }}>
-                      Pre-selected for you. Primary language: {primaryLanguage}
+                    <div style={{ color: "#475569", fontSize: "11px", marginTop: "8px", fontWeight: 600 }}>
+                      Pre-selected for you. Primary: <span style={{ color: "var(--accent)", fontWeight: 800 }}>{primaryLanguage}</span>
                     </div>
                   </div>
                 </div>

@@ -168,7 +168,7 @@ function App() {
             onClick={handleBackToLanding}
             style={{ cursor: "pointer" }}
           >
-            <Globe size={20} className="navbar-logo" />
+            <img src="/icons/image.png" alt="Logo" className="navbar-logo" style={{ width: "24px", height: "24px", filter: "brightness(0) invert(1)" }} />
             <span>
               Repo<span className="navbar-accent">Atlas</span>
             </span>

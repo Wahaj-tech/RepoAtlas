@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const BASE = "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
 const api = axios.create({
-  baseURL: BASE,
+  baseURL: API_BASE,
   timeout: 120000,
 });
 
@@ -51,7 +51,7 @@ export const getImpact = async (githubUrl, filePath) => {
 export const getRepoLanguages = async (githubUrl) => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/repo-languages?github_url=${encodeURIComponent(githubUrl)}`
+      `${API_BASE}/repo-languages?github_url=${encodeURIComponent(githubUrl)}`
     );
     const data = await response.json();
     return data;

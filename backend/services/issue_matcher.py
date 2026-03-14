@@ -227,16 +227,19 @@ async def analyze_issue(
     # Step 5 — LLM refinement (optional, requires API key)
     if use_llm:
         graph_context = [n for n in graph.nodes]
-        llm_result = await analyze_issue_relevance(
-            issue_title=issue_title,
-            issue_body=issue_body,
-            issue_labels=issue_labels,
-            matched_files=top_candidates,
-            graph_context=graph_context,
-        )
-        llm_result["keywords_extracted"] = keywords
-        llm_result["issue"] = issue_title
-        return llm_result
+        try:
+            llm_result = await analyze_issue_relevance(
+                issue_title=issue_title,
+                issue_body=issue_body,
+                issue_labels=issue_labels,
+                matched_files=top_candidates,
+                graph_context=graph_context,
+            )
+            llm_result["keywords_extracted"] = keywords
+            llm_result["issue"] = issue_title
+            return llm_result
+        except Exception as llm_err:
+            print(f"[IssueMatcher] LLM fallback activated: {type(llm_err).__name__}: {llm_err}")
 
     # Without LLM — return algorithmic results only
     return {

@@ -6,7 +6,12 @@ All LLM interactions go through this module so the model/provider
 can be swapped without touching business logic.
 """
 
-from groq import Groq
+try:
+  from groq import Groq
+  _groq_import_error = None
+except Exception as import_error:
+  Groq = None
+  _groq_import_error = import_error
 import json
 import os
 from dotenv import load_dotenv
@@ -17,14 +22,18 @@ _client = None
 MODEL = "llama-3.3-70b-versatile"
 
 
-def _get_client() -> Groq:
-    global _client
-    if _client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            raise RuntimeError("GROQ_API_KEY is not set. Add it to backend/.env")
-        _client = Groq(api_key=api_key)
-    return _client
+def _get_client():
+  global _client
+  if _client is None:
+    if Groq is None:
+      raise RuntimeError(
+        "groq package is not installed. Add 'groq' to backend/requirements.txt"
+      ) from _groq_import_error
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+      raise RuntimeError("GROQ_API_KEY is not set. Add it to backend/.env")
+    _client = Groq(api_key=api_key)
+  return _client
 
 
 def _parse_json(raw: str):

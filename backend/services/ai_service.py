@@ -1,4 +1,9 @@
-from groq import Groq
+try:
+  from groq import Groq
+  _groq_import_error = None
+except Exception as import_error:
+  Groq = None
+  _groq_import_error = import_error
 import json
 import os
 from dotenv import load_dotenv
@@ -10,13 +15,17 @@ _client = None
 
 
 def get_client():
-    global _client
-    if _client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            raise RuntimeError("GROQ_API_KEY is not set. Add it to backend/.env")
-        _client = Groq(api_key=api_key)
-    return _client
+  global _client
+  if _client is None:
+    if Groq is None:
+      raise RuntimeError(
+        "groq package is not installed. Add 'groq' to backend/requirements.txt"
+      ) from _groq_import_error
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+      raise RuntimeError("GROQ_API_KEY is not set. Add it to backend/.env")
+    _client = Groq(api_key=api_key)
+  return _client
 
 
 def _parse_ai_json(raw: str):
@@ -115,6 +124,65 @@ def _fallback_ranked_issues(candidates, user_profile, max_results=3, include_url
     out.append(result)
 
   return out
+
+
+def _fallback_contribution_path(issue, graph, user_profile):
+  """Deterministic contribution path when AI provider is unavailable."""
+  issue_title = issue.get("title", "this issue")
+  experience = (user_profile.get("experience") or "beginner").lower()
+  nodes = graph.get("nodes", []) if isinstance(graph, dict) else []
+  likely_files = [n.get("id") for n in nodes if isinstance(n, dict) and n.get("id")][:3]
+
+  total_time = {
+    "beginner": "1-3 days",
+    "intermediate": "6-12 hours",
+    "advanced": "3-8 hours",
+  }.get(experience, "6-12 hours")
+
+  first_file = likely_files[0] if likely_files else "README.md"
+
+  return {
+    "steps": [
+      {
+        "step": 1,
+        "title": "Understand issue scope",
+        "action": (
+          f"Read the issue '{issue_title}' and map expected behavior versus current behavior. "
+          "Note concrete acceptance criteria before changing code."
+        ),
+        "file": first_file,
+        "why": "Clear acceptance criteria reduces rework and keeps the fix focused.",
+      },
+      {
+        "step": 2,
+        "title": "Trace execution path",
+        "action": "Locate the entry-point function and follow call flow through related modules.",
+        "file": first_file,
+        "why": "Understanding control flow helps avoid accidental regressions.",
+      },
+      {
+        "step": 3,
+        "title": "Implement minimal fix",
+        "action": (
+          "Apply the smallest safe code change that resolves root cause, "
+          "then validate behavior on both expected and edge inputs."
+        ),
+        "file": likely_files[1] if len(likely_files) > 1 else first_file,
+        "why": "Smaller changes are easier to review and less risky to deploy.",
+      },
+      {
+        "step": 4,
+        "title": "Validate and document",
+        "action": "Run relevant tests or manual checks and summarize what changed and why.",
+        "file": likely_files[2] if len(likely_files) > 2 else first_file,
+        "why": "Validation plus concise notes speeds maintainer review.",
+      },
+    ],
+    "estimated_total_time": total_time,
+    "key_files": likely_files,
+    "tips": "If behavior is ambiguous, verify expected output from issue comments before coding.",
+    "setup_commands": [],
+  }
 
 
 async def get_recommendations(issues, graph, user_profile):
@@ -536,10 +604,14 @@ Return ONLY valid JSON, no explanation, no markdown backticks:
   "setup_commands": []
 }}"""
 
-    response = get_client().chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=1500,
-        temperature=0.3,
-    )
-    return _parse_ai_json(response.choices[0].message.content)
+    try:
+      response = get_client().chat.completions.create(
+          model="llama-3.3-70b-versatile",
+          messages=[{"role": "user", "content": prompt}],
+          max_tokens=1500,
+          temperature=0.3,
+      )
+      return _parse_ai_json(response.choices[0].message.content)
+    except Exception as e:
+      print(f"GROQ ERROR IN GET_CONTRIBUTION_PATH: {type(e).__name__}: {e}")
+      return _fallback_contribution_path(issue, graph, user_profile)
